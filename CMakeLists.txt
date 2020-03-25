@@ -4,7 +4,7 @@ project(invest-fetch VERSION 0.1.0)
 include(CTest)
 enable_testing()
 
-add_executable(invest-fetch invest.c nzx.c nzx.h)
+add_executable(invest-fetch invest.c nzx.c nzx.h nzxList.c nzxList.h)
 
 find_package(CURL REQUIRED) 
 

@@ -66,16 +66,56 @@ ProcessListing(char* ptr)
 }
 
 void 
-ExtractListings(memoryChunk_t* chunk)
+extractMarketListings(memoryChunk_t* chunk, NZXNode_t** head)
 {
   char* ptr;
 
+  // Move the pointer to the start of the datatable
   ptr = strstr(chunk->memory, "<tbody>");
-  FILE *f;
-  f = fopen("test.txt", "w");
+  // Check there is actually a table in the HTML downloaded
+  if (!ptr) {
+    return;
+  }
 
-  fprintf(f, "%s", ptr);
-  fclose(f);
+  const char* CODE_STRING = "<tr class=\"\" title=\"";
+  const int CODE_SIZE = 3;
+
+  const char* COMPANY_STRING = " <a title=\"";
+
+  // Move the ptr to the first data row
+  ptr = strstr(ptr, CODE_STRING);
+
+  while (ptr)
+  {
+    listing_t listing;
+
+    // Extract the listing code
+    ptr += strlen(CODE_STRING);
+    listing.Code = malloc((CODE_SIZE + 1) * sizeof(char));
+    listing.Code[CODE_SIZE] = '\0';
+    strncpy(listing.Code, ptr, 3);
+
+    // printf("%s\n", listing.Code);
+
+    // Find the end of the company name
+    ptr = strstr(ptr, COMPANY_STRING);
+    ptr += strlen(COMPANY_STRING);
+    char* end = strchr(ptr + 1, '"');
+    int companyLength = (int)(end - ptr);
+
+    listing.Company = malloc((companyLength + 1) * sizeof(char));
+    listing.Company[companyLength] = '\0';
+    strncpy(listing.Company, ptr, companyLength);
+
+    // printf("%s\n", listing.Company);
+
+
+    pushListing(head, listing);
+
+    // Move the ptr to the next data row if it exists
+    ptr = strstr(ptr, CODE_STRING);
+
+  }
 }
 
 void

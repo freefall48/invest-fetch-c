@@ -7,21 +7,18 @@
 
 #include <curl/curl.h>
 
+#include "nzxList.h"
+
 typedef struct MemoryChunk {
   char *memory;
   size_t size;
 } memoryChunk_t;
 
-typedef struct Listing {
-  char *code;
-  char *company;
-} listing_t;
-
 memoryChunk_t* 
 FetchNZXData(void);
 
 void 
-ExtractListings(memoryChunk_t* chunk);
+extractMarketListings(memoryChunk_t* chunk, NZXNode_t** head);
 
 void 
 freeMemoryChunk(memoryChunk_t* chunk);
