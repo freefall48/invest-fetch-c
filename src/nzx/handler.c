@@ -95,8 +95,17 @@ generatePriceListing(char** ptr)
     end = strchr(*ptr, ' ');
 
     listing.Price = strtof(*ptr, &end);
-    printf("%.4f\n", listing.Price);
     return listing;
+}
+
+static void
+to_nbo(float in, float *out)
+{
+    uint32_t *i = (uint32_t *)&in;
+    uint16_t *r = (uint16_t *)out;
+
+    r[0] = htons((uint16_t)((*i) >> 16u));
+    r[1] = htons((uint16_t)*i);
 }
 
 int
@@ -107,14 +116,17 @@ nzxStoreMarketPrices(NZXNode_t *head)
 
     while (head)
     {
-        const char * const paramValues[2] = { head->listing.Code, (char*) &(head->listing.Price) };
+        float converted; // This is now in network byte order
+        to_nbo(head->listing.Price, &converted);
 
-        int paramLengths[2] = { (int) strlen(head->listing.Code), sizeof(head->listing.Price)};
+        const char * const paramValues[2] = { head->listing.Code, (char*) &converted };
+
+        int paramLengths[2] = { (int) strlen(head->listing.Code), sizeof(converted)};
         int paramFormats[2] = {0 , 1};
 
         PGresult *res = PQexecParams(
                 conn,
-                "INSERT INTO nzx.prices (time, code, price) VALUES (NOW(), $1, $2::NUMERIC(16));",
+                "INSERT INTO nzx.prices (time, code, price) VALUES (NOW(), $1, $2::real);",
                 2,
                 NULL,
                 paramValues,
