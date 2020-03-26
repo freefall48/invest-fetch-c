@@ -1,18 +1,17 @@
-cmake_minimum_required(VERSION 3.0.0)
-project(invest-fetch VERSION 0.1.0)
+cmake_minimum_required(VERSION 3.10)
+project(invest_fetch_c C)
 
-include(CTest)
-enable_testing()
+set(CMAKE_C_STANDARD 11)
 
-add_executable(invest-fetch invest.c nzx.c nzx.h nzxList.c nzxList.h)
+find_package(CURL REQUIRED)
+find_package(PostgreSQL REQUIRED)
 
-find_package(CURL REQUIRED) 
+add_executable(invest_fetch_c src/main.c src/nzx/models.c src/nzx/models.h src/nzx/handler.c src/nzx/handler.h src/nzx/httpOps.h src/nzx/httpOps.c)
 
+target_include_directories(invest_fetch_c PRIVATE ${CURL_INCLUDE_DIR})
+target_include_directories(invest_fetch_c PRIVATE ${PostgreSQL_INCLUDE_DIRS})
 
-include_directories(${CURL_INCLUDE_DIR})
-target_link_libraries(invest-fetch ${CURL_LIBRARIES})
+target_link_libraries(invest_fetch_c PRIVATE ${CURL_LIBRARIES})
+target_link_libraries(invest_fetch_c PRIVATE ${PostgreSQL_LIBRARIES})
 
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-set(CURL_LIBRARY "-lcurl") 
-include(CPack)
+set(CURL_LIBRARY "-lcurl")
