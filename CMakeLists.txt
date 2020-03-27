@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 11)
 find_package(CURL REQUIRED)
 find_package(PostgreSQL REQUIRED)
 
-add_executable(invest_fetch_c src/main.c src/nzx/models.c src/nzx/models.h src/nzx/handler.c src/nzx/handler.h src/nzx/httpOps.h src/nzx/httpOps.c)
+add_executable(invest_fetch_c src/main.c src/nzx/models.c src/nzx/models.h src/nzx/handler.c src/nzx/handler.h src/nzx/httpOps.h src/nzx/httpOps.c src/scheduler/schedule.c src/scheduler/schedule.h)
 
 target_include_directories(invest_fetch_c PRIVATE ${CURL_INCLUDE_DIR})
 target_include_directories(invest_fetch_c PRIVATE ${PostgreSQL_INCLUDE_DIRS})

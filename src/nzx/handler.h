@@ -1,6 +1,8 @@
 //
-// Created by matth on 26/03/2020.
+// Created by Matthew Johnson on 27/03/2020.
+// Copyright (c) 2020 LocalNetwork NZ. All rights reserved.
 //
+
 
 #ifndef INVEST_FETCH_C_HANDLER_H
 #define INVEST_FETCH_C_HANDLER_H
@@ -10,6 +12,7 @@
 #include <string.h>
 #include <curl/curl.h>
 #include <libpq-fe.h>
+#include <netinet/in.h>
 
 #include "models.h"
 #include "httpOps.h"

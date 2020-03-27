@@ -1,6 +1,8 @@
 //
-// Created by matth on 26/03/2020.
+// Created by Matthew Johnson on 27/03/2020.
+// Copyright (c) 2020 LocalNetwork NZ. All rights reserved.
 //
+
 #include "httpOps.h"
 
 static size_t

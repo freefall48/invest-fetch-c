@@ -1,8 +1,8 @@
 //
-// Created by matth on 26/03/2020.
+// Created by Matthew Johnson on 27/03/2020.
+// Copyright (c) 2020 LocalNetwork NZ. All rights reserved.
 //
 
-#include <netinet/in.h>
 #include "handler.h"
 
 static char*
@@ -95,6 +95,9 @@ generatePriceListing(char** ptr)
     end = strchr(*ptr, ' ');
 
     listing.Price = strtof(*ptr, &end);
+
+    listing.Company = NULL; // Needs to be null for when the listing is freed.
+
     return listing;
 }
 

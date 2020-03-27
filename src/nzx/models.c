@@ -1,6 +1,8 @@
 //
-// Created by matth on 26/03/2020.
+// Created by Matthew Johnson on 27/03/2020.
+// Copyright (c) 2020 LocalNetwork NZ. All rights reserved.
 //
+
 
 #include "models.h"
 
@@ -53,8 +55,12 @@ nzxListingsCount (NZXNode_t* head)
 void
 nzxFreeListing(listing_t* listing)
 {
-    free(listing->Company);
+    // Its possible the company is not assigned
+    if (listing->Company != NULL) {
+        free(listing->Company);
+    }
+    // We always expect a code inside the listing
     free(listing->Code);
-
+    //
     free(listing);
 }
