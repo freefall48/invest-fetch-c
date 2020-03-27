@@ -20,8 +20,8 @@ typedef struct MemoryChunk {
 } memoryChunk_t;
 
 
-memoryChunk_t* nzxFetchData(void);
+memoryChunk_t *nzxFetchData(void);
 
-void nzxFreeMemoryChunk(memoryChunk_t* chunk);
+void nzxFreeMemoryChunk(memoryChunk_t *chunk);
 
 #endif //INVEST_FETCH_C_HTTPOPS_H

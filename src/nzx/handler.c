@@ -5,16 +5,15 @@
 
 #include "handler.h"
 
-static char*
-extractCode(char** ptr)
-{
-    char* code;
-    char* end;
+static char *
+extractCode(char **ptr) {
+    char *code;
+    char *end;
     int len;
 
     *ptr += strlen(NZX_CODE_IDF);
     end = strchr((*ptr) + 1, '"');
-    len = (int)(end - (*ptr));
+    len = (int) (end - (*ptr));
     code = malloc((len + 1) * sizeof(char));
     code[len] = '\0';
     strncpy(code, *ptr, len);
@@ -22,8 +21,7 @@ extractCode(char** ptr)
     return code;
 }
 
-static PGconn* postgresConnect(void)
-{
+static PGconn *postgresConnect(void) {
     PGconn *conn;
 
     conn = PQconnectdb(NZX_POSTGRES_URL);
@@ -31,14 +29,12 @@ static PGconn* postgresConnect(void)
      * This can only happen if there is not enough memory
      * to allocate the PGconn structure.
      */
-    if (conn == NULL)
-    {
+    if (conn == NULL) {
         fprintf(stderr, "Out of memory connecting to PostgreSQL.\n");
         return NULL;
     }
     /* check if the connection attempt worked */
-    if (PQstatus(conn) != CONNECTION_OK)
-    {
+    if (PQstatus(conn) != CONNECTION_OK) {
         fprintf(stderr, "%s\n", PQerrorMessage(conn));
         /*
          * Even if the connection failed, the PGconn structure has been
@@ -55,10 +51,9 @@ static PGconn* postgresConnect(void)
 
 
 static listing_t
-generateCoreListing(char** ptr)
-{
+generateCoreListing(char **ptr) {
     listing_t listing;
-    char* end;
+    char *end;
     int len;
     // Extract the listing code
     listing.Code = extractCode(ptr);
@@ -67,7 +62,7 @@ generateCoreListing(char** ptr)
     *ptr = strstr(*ptr, NZX_COMP_IDF);
     *ptr += strlen(NZX_COMP_IDF);
     end = strchr((*ptr) + 1, '"');
-    len = (int)(end - (*ptr));
+    len = (int) (end - (*ptr));
 
     listing.Company = malloc((len + 1) * sizeof(char));
     listing.Company[len] = '\0';
@@ -77,10 +72,9 @@ generateCoreListing(char** ptr)
 }
 
 static listing_t
-generatePriceListing(char** ptr)
-{
+generatePriceListing(char **ptr) {
     listing_t listing;
-    char* end;
+    char *end;
     int len;
     /*
      * First extract the the code for this record. Then look for the
@@ -102,30 +96,27 @@ generatePriceListing(char** ptr)
 }
 
 static void
-to_nbo(float in, float *out)
-{
-    uint32_t *i = (uint32_t *)&in;
-    uint16_t *r = (uint16_t *)out;
+to_nbo(float in, float *out) {
+    uint32_t *i = (uint32_t * ) & in;
+    uint16_t *r = (uint16_t *) out;
 
     r[0] = htons((uint16_t)((*i) >> 16u));
-    r[1] = htons((uint16_t)*i);
+    r[1] = htons((uint16_t) * i);
 }
 
 int
-nzxStoreMarketPrices(NZXNode_t *head)
-{
-    PGconn* conn;
+nzxStoreMarketPrices(NZXNode_t *head) {
+    PGconn *conn;
     conn = postgresConnect();
 
-    while (head)
-    {
+    while (head) {
         float converted; // This is now in network byte order
         to_nbo(head->listing.Price, &converted);
 
-        const char * const paramValues[2] = { head->listing.Code, (char*) &converted };
+        const char *const paramValues[2] = {head->listing.Code, (char *) &converted};
 
-        int paramLengths[2] = { (int) strlen(head->listing.Code), sizeof(converted)};
-        int paramFormats[2] = {0 , 1};
+        int paramLengths[2] = {(int) strlen(head->listing.Code), sizeof(converted)};
+        int paramFormats[2] = {0, 1};
 
         PGresult *res = PQexecParams(
                 conn,
@@ -142,7 +133,7 @@ nzxStoreMarketPrices(NZXNode_t *head)
         }
 
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            printf( " Problem is: %s\n", PQerrorMessage(conn));
+            printf(" Problem is: %s\n", PQerrorMessage(conn));
         }
         head = head->next;
         PQclear(res);
@@ -154,12 +145,11 @@ nzxStoreMarketPrices(NZXNode_t *head)
 int
 nzxStoreMarketListings(NZXNode_t *head) {
 
-    PGconn* conn;
+    PGconn *conn;
     conn = postgresConnect();
 
-    while (head)
-    {
-        const char * const paramValues[2] = { head->listing.Code, head->listing.Company };
+    while (head) {
+        const char *const paramValues[2] = {head->listing.Code, head->listing.Company};
 
         PGresult *res = PQexecParams(
                 conn,
@@ -176,7 +166,7 @@ nzxStoreMarketListings(NZXNode_t *head) {
         }
 
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            printf( " Problem is: %s\n", PQerrorMessage(conn));
+            printf(" Problem is: %s\n", PQerrorMessage(conn));
         }
         head = head->next;
         PQclear(res);
@@ -185,10 +175,9 @@ nzxStoreMarketListings(NZXNode_t *head) {
     return 0;
 }
 
-static char*
-locateData(memoryChunk_t** chunk)
-{
-    char* ptr;
+static char *
+locateData(memoryChunk_t **chunk) {
+    char *ptr;
 
     // Move the pointer to the start of the data table
     ptr = strstr((*chunk)->memory, NZX_TABLE_IDF);
@@ -198,9 +187,8 @@ locateData(memoryChunk_t** chunk)
 }
 
 void
-nzxExtractMarketPrices(memoryChunk_t* chunk, NZXNode_t** head)
-{
-    char* ptr;
+nzxExtractMarketPrices(memoryChunk_t *chunk, NZXNode_t **head) {
+    char *ptr;
 
     ptr = locateData(&chunk);
     // Check there is actually a table in the HTML downloaded
@@ -219,9 +207,8 @@ nzxExtractMarketPrices(memoryChunk_t* chunk, NZXNode_t** head)
 }
 
 void
-nzxExtractMarketListings(memoryChunk_t* chunk, NZXNode_t** head)
-{
-    char* ptr;
+nzxExtractMarketListings(memoryChunk_t *chunk, NZXNode_t **head) {
+    char *ptr;
 
     ptr = locateData(&chunk);
     // Check there is actually a table in the HTML downloaded
@@ -230,8 +217,7 @@ nzxExtractMarketListings(memoryChunk_t* chunk, NZXNode_t** head)
     }
 
     // Loop through all the rows of the table
-    while (ptr)
-    {
+    while (ptr) {
         listing_t listing = generateCoreListing(&ptr);
         nzxPushListing(head, listing);
         // Move the ptr to the next data row if it exists

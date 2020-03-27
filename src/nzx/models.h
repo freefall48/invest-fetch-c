@@ -25,20 +25,20 @@ typedef struct Listing {
 
 typedef struct NZXNode {
     listing_t listing;
-    struct NZXNode* next;
+    struct NZXNode *next;
 } NZXNode_t;
 
 
 void
-nzxPushListing (NZXNode_t** head, listing_t entry);
+nzxPushListing(NZXNode_t **head, listing_t entry);
 
-listing_t*
-nzxPopListing (NZXNode_t** head);
+listing_t *
+nzxPopListing(NZXNode_t **head);
 
 int
-nzxListingsCount (NZXNode_t* head);
+nzxListingsCount(NZXNode_t *head);
 
 void
-nzxFreeListing(listing_t* listing);
+nzxFreeListing(listing_t *listing);
 
 #endif //INVEST_FETCH_C_MODELS_H

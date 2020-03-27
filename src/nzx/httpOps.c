@@ -6,13 +6,12 @@
 #include "httpOps.h"
 
 static size_t
-writeMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
-{
+writeMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp) {
     size_t i = size * nmemb;
-    memoryChunk_t *mem = (memoryChunk_t *)userp;
+    memoryChunk_t *mem = (memoryChunk_t *) userp;
 
     char *ptr = realloc(mem->memory, mem->size + i + 1);
-    if(ptr == NULL) {
+    if (ptr == NULL) {
         /* out of memory! */
         printf("not enough memory (realloc returned NULL)\n");
         return 0;
@@ -26,13 +25,12 @@ writeMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
     return i;
 }
 
-memoryChunk_t*
-nzxFetchData(void)
-{
+memoryChunk_t *
+nzxFetchData(void) {
     CURL *curl_handle;
     CURLcode res;
 
-    memoryChunk_t* chunk = malloc(sizeof (memoryChunk_t));
+    memoryChunk_t *chunk = malloc(sizeof(memoryChunk_t));
 
     chunk->memory = malloc(1);
     chunk->size = 0;
@@ -41,8 +39,9 @@ nzxFetchData(void)
     // Set the options for this curl handler
     curl_easy_setopt(curl_handle, CURLOPT_URL, NZX_URL);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
-    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)chunk);
-    curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36");
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *) chunk);
+    curl_easy_setopt(curl_handle, CURLOPT_USERAGENT,
+                     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36");
 
     res = curl_easy_perform(curl_handle);
     // Check for errors
@@ -50,7 +49,7 @@ nzxFetchData(void)
         fprintf(stderr, "curl_easy_perform() failed: %s\n",
                 curl_easy_strerror(res));
     } else {
-        printf("%lu bytes retrieved\n", (unsigned long)chunk->size);
+        printf("%lu bytes retrieved\n", (unsigned long) chunk->size);
     }
 
     // Clean up and return
@@ -60,8 +59,7 @@ nzxFetchData(void)
 }
 
 void
-nzxFreeMemoryChunk(memoryChunk_t* chunk)
-{
+nzxFreeMemoryChunk(memoryChunk_t *chunk) {
     free(chunk->memory);
     free(chunk);
 }

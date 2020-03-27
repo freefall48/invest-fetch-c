@@ -3,13 +3,11 @@
 // Copyright (c) 2020 LocalNetwork NZ. All rights reserved.
 //
 
-
 #include "models.h"
 
 void
-nzxPushListing (NZXNode_t** head, listing_t entry)
-{
-    NZXNode_t* node = (NZXNode_t*) malloc(sizeof(NZXNode_t));
+nzxPushListing(NZXNode_t **head, listing_t entry) {
+    NZXNode_t *node = (NZXNode_t *) malloc(sizeof(NZXNode_t));
 
     node->listing = entry;
 
@@ -19,18 +17,14 @@ nzxPushListing (NZXNode_t** head, listing_t entry)
     *head = node;
 }
 
-listing_t*
-nzxPopListing (NZXNode_t** head)
-{
-    if (!*head)
-    {
+listing_t *
+nzxPopListing(NZXNode_t **head) {
+    if (!*head) {
         return NULL;
-    }
-    else
-    {
-        NZXNode_t* next = (*head)->next;
+    } else {
+        NZXNode_t *next = (*head)->next;
 
-        listing_t* listing = (listing_t*) malloc(sizeof(listing_t));
+        listing_t *listing = (listing_t *) malloc(sizeof(listing_t));
         *listing = (*head)->listing;
 
         free(*head);
@@ -41,8 +35,7 @@ nzxPopListing (NZXNode_t** head)
 }
 
 int
-nzxListingsCount (NZXNode_t* head)
-{
+nzxListingsCount(NZXNode_t *head) {
     int count = 0;
     while (head) {
         count += 1;
@@ -53,8 +46,7 @@ nzxListingsCount (NZXNode_t* head)
 }
 
 void
-nzxFreeListing(listing_t* listing)
-{
+nzxFreeListing(listing_t *listing) {
     // Its possible the company is not assigned
     if (listing->Company != NULL) {
         free(listing->Company);

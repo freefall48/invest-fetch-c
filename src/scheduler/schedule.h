@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <time.h>
 
 typedef struct Task {
     /*
@@ -21,6 +22,7 @@ typedef struct Task {
 
     time_t next;
     time_t prev;
+
     /*
      * The function to call when the timer elapses.
      */
@@ -29,7 +31,9 @@ typedef struct Task {
 
 typedef struct TaskNode {
     task_t task;
-    struct TaskNode* next;
+    struct TaskNode *next;
 } taskNode_t;
+
+void taskAdd(taskNode_t **head, task_t task);
 
 #endif //INVEST_FETCH_C_SCHEDULE_H

@@ -6,7 +6,8 @@
 #include "schedule.h"
 
 void
-taskAdd(taskNode_t** head, task_t task)
-{
+taskAdd(taskNode_t **head, task_t task) {
+    time_t current = time(NULL);
+    printf("%ld\n", current);
 
 }
