@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <time.h>
 
 typedef struct Task {
@@ -16,12 +17,12 @@ typedef struct Task {
      * Starting and ending times for this task.
      */
     uint8_t startHour;
-    uint8_t startMinute;
     uint8_t endHour;
-    uint8_t endMinute;
+    uint8_t rateHour;
+    uint8_t  rateMinute;
 
-    time_t next;
-    time_t prev;
+    struct tm next;
+    struct tm prev;
 
     /*
      * The function to call when the timer elapses.
@@ -34,6 +35,8 @@ typedef struct TaskNode {
     struct TaskNode *next;
 } taskNode_t;
 
-void taskAdd(taskNode_t **head, task_t task);
+void taskAdd(taskNode_t **head, task_t *task);
+
+int taskProcessor(taskNode_t **head);
 
 #endif //INVEST_FETCH_C_SCHEDULE_H

@@ -9,6 +9,12 @@
 #include "nzx/handler.h"
 #include "scheduler/schedule.h"
 
+void
+hi(void)
+{
+    puts("I was called!");
+}
+
 int main() {
 /*    curl_global_init(CURL_GLOBAL_NOTHING);
     memoryChunk_t *chunk = nzxFetchData();
@@ -29,14 +35,28 @@ int main() {
 /* Testing the scheduler */
 taskNode_t* head = NULL;
 task_t task;
+task_t task2;
 
 /* Define the start and end time for this task*/
-task.startHour = 21;
-task.startMinute = 0;
+task.startHour = 2;
 task.endHour = 4;
-task.endMinute = 30;
+task.rateHour = 1;
+task.rateMinute = 2;
 
-taskAdd(&head, task);
+task.func = hi;
 
+/* Define the start and end time for this task*/
+//task2.startHour = 4;
+//task2.endHour = 7;
+//task2.rateHour = 1;
+//task2.rateMinute = 20;
+
+//taskAdd(&head, &task2);
+taskAdd(&head, &task);
+
+
+printf("Task1   : %s", asctime(&task.next));
+
+taskProcessor(&head);
 
 }
