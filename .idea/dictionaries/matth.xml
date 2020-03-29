@@ -1,16 +1,28 @@
 <component name="ProjectDictionaryState">
   <dictionary name="matth">
     <words>
+      <w>activep</w>
+      <w>activepp</w>
+      <w>addr</w>
+      <w>busycv</w>
+      <w>errno</w>
+      <w>forw</w>
       <w>gconn</w>
       <w>httpops</w>
       <w>khtml</w>
       <w>nmemb</w>
+      <w>nthreads</w>
+      <w>oset</w>
       <w>postgre</w>
       <w>postgresql</w>
       <w>realloc</w>
       <w>tbody</w>
+      <w>threadpool</w>
+      <w>timedout</w>
       <w>timestampz</w>
       <w>userp</w>
+      <w>waitcv</w>
+      <w>workcv</w>
     </words>
   </dictionary>
 </component>

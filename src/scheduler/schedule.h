@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <time.h>
 
+#include "../threading/threadPool.h"
+
 typedef struct Task {
     /*
      * Starting and ending times for this task.
@@ -21,13 +23,13 @@ typedef struct Task {
     uint8_t rateHour;
     uint8_t  rateMinute;
 
-    struct tm next;
-    struct tm prev;
+    struct tm *next;
+    struct tm *prev;
 
     /*
      * The function to call when the timer elapses.
      */
-    void (*func)(void);
+    void *(*func)(void*);
 } task_t;
 
 typedef struct TaskNode {
@@ -37,6 +39,6 @@ typedef struct TaskNode {
 
 void taskAdd(taskNode_t **head, task_t *task);
 
-int taskProcessor(taskNode_t **head);
+void taskProcessor(taskNode_t **head);
 
 #endif //INVEST_FETCH_C_SCHEDULE_H

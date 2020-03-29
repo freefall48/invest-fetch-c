@@ -17,14 +17,29 @@ currentUTC(struct tm **ptm)
     if (ptm == NULL) {
         puts("Failed to convert to GMT time");
     }
+    /* Stop Daylight savings as UTC does not use this. */
+    (*ptm)->tm_isdst = -1;
 }
 
 static void
 calcNextRun(struct tm *ptm, task_t *task) {
-    /* Stop DST as UTC does not use this */
-    ptm->tm_isdst = -1;
+    /* Check if this task should only be repeated daily. */
+    if (task->startHour == task->endHour) {
+        /* Check if this task has been run before. */
+        if (ptm->tm_hour > task->startHour) {
+            ptm->tm_hour = task->startHour;
+            ptm->tm_min = 0;
+            ptm->tm_sec = 0;
+        } else {
+            /* Add a day so its called tomorrow. */
+            ptm->tm_mday += 1;
+            ptm->tm_hour = task->startHour;
+            ptm->tm_min = 0;
+            ptm->tm_sec = 0;
+        }
+    }
     /* Check if this task has a run period that wraps over midnight UTC */
-    if (task->startHour > task->endHour) {
+    else if (task->startHour > task->endHour) {
         if (ptm->tm_hour >= task->startHour || ptm->tm_hour < task->endHour) {
             /* Add the offset for the next run */
             ptm->tm_hour += task->rateHour;
@@ -40,9 +55,18 @@ calcNextRun(struct tm *ptm, task_t *task) {
             ptm->tm_hour += task->rateHour;
             ptm->tm_min += task->rateMinute;
         } else {
-            ptm->tm_hour = task->startHour;
-            ptm->tm_min = 0;
-            ptm->tm_sec = 0;
+            /* Check if this task has been run before. */
+            if (ptm->tm_hour > task->startHour) {
+                ptm->tm_hour = task->startHour;
+                ptm->tm_min = 0;
+                ptm->tm_sec = 0;
+            } else {
+                /* Add a day so its called tomorrow. */
+                ptm->tm_mday += 1;
+                ptm->tm_hour = task->startHour;
+                ptm->tm_min = 0;
+                ptm->tm_sec = 0;
+            }
         }
     }
     /* Reform the tm struct to represent the changes to time and handle
@@ -56,19 +80,23 @@ taskAdd(taskNode_t **head, task_t *task) {
     struct tm *ptm;
     taskNode_t  *current;
     currentUTC(&ptm);
+
     calcNextRun(ptm, task);
-    task->next = *ptm;
+    struct tm *runTime = (struct tm *) malloc(sizeof(struct tm));
+    *runTime = *ptm;
+    task->next = runTime;
+
     taskNode_t *node = (taskNode_t *) malloc(sizeof(taskNode_t));
     node->task = *task;
     /* Check if the queue is empty of the task should be the first in the queue. */
-    if (*head == NULL || mktime(&((*head)->task.next)) >= mktime(&(node->task.next))) {
+    if (*head == NULL || mktime(((*head)->task.next)) >= mktime((node->task.next))) {
         node->next = *head;
         *head = node;
     }
     else {
         current = *head;
         /* Move to the correct position this task should be added. */
-        while (current->next != NULL && mktime(&(current->next->task.next)) < mktime(&(node->task.next)))
+        while (current->next != NULL && mktime((current->next->task.next)) < mktime((node->task.next)))
         {
             current = current->next;
         }
@@ -77,29 +105,40 @@ taskAdd(taskNode_t **head, task_t *task) {
     }
 }
 
-int
+void
 taskProcessor(taskNode_t **head)
 {
+    threadPool_t *threadPool = thrPoolCreate(1, 1, 120, NULL);
     while (1) {
         /* Get the current UTC time. */
         struct tm *ptm;
         currentUTC(&ptm);
         /* Check we have not been given an empty list of tasks. */
         if (*head == NULL) {
-            return -1;
+            break;
         }
         /* Get the next task to be executed. */
         taskNode_t *next = (*head) -> next;
         task_t task = (*head)->task;
         /* Calculate and wait until the task should be executed. */
-        unsigned int duration = mktime(&task.next) - mktime(ptm);
-        if (duration < 0) {
-            return -1;
+        long int duration = mktime(task.next) - mktime(ptm);
+        /* Sleep if we need to. */
+        if (duration > 0) {
+            printf("Waiting until %s", asctime(task.next));
+            sleep(duration);
         }
-        sleep(duration);
-        task.func();
+        thrPoolQueue(threadPool, task.func, NULL);
+        task.prev = task.next;
+        /* Free up memory allocations. */
+        if (task.prev != NULL) {
+            free(task.prev);
+        }
         /* Add the task back into the queue. */
         (*head) = next;
         taskAdd(head, &task);
     }
+    /* Something has broken or has requested this processor to stop. So cleanup
+     * the pool. */
+    thrPoolWait(threadPool);
+    thrPoolDestroy(threadPool);
 }

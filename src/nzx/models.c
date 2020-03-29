@@ -6,8 +6,19 @@
 #include "models.h"
 
 void
-nzxPushListing(NZXNode_t **head, listing_t entry) {
-    NZXNode_t *node = (NZXNode_t *) malloc(sizeof(NZXNode_t));
+nzxDrainListings(nzxNode_t **head)
+{
+    listing_t *current = nzxPopListing(head);
+    while (current) {
+
+        nzxFreeListing(current);
+        current = nzxPopListing(head);
+    }
+}
+
+void
+nzxPushListing(nzxNode_t **head, listing_t entry) {
+    nzxNode_t *node = (nzxNode_t *) malloc(sizeof(nzxNode_t));
 
     node->listing = entry;
 
@@ -18,11 +29,11 @@ nzxPushListing(NZXNode_t **head, listing_t entry) {
 }
 
 listing_t *
-nzxPopListing(NZXNode_t **head) {
+nzxPopListing(nzxNode_t **head) {
     if (!*head) {
         return NULL;
     } else {
-        NZXNode_t *next = (*head)->next;
+        nzxNode_t *next = (*head)->next;
 
         listing_t *listing = (listing_t *) malloc(sizeof(listing_t));
         *listing = (*head)->listing;
@@ -35,7 +46,7 @@ nzxPopListing(NZXNode_t **head) {
 }
 
 int
-nzxListingsCount(NZXNode_t *head) {
+nzxListingsCount(nzxNode_t *head) {
     int count = 0;
     while (head) {
         count += 1;

@@ -26,17 +26,17 @@ typedef struct Listing {
 typedef struct NZXNode {
     listing_t listing;
     struct NZXNode *next;
-} NZXNode_t;
+} nzxNode_t;
 
+void nzxDrainListings(nzxNode_t **head);
 
-void
-nzxPushListing(NZXNode_t **head, listing_t entry);
+void nzxPushListing(nzxNode_t **head, listing_t entry);
 
 listing_t *
-nzxPopListing(NZXNode_t **head);
+nzxPopListing(nzxNode_t **head);
 
 int
-nzxListingsCount(NZXNode_t *head);
+nzxListingsCount(nzxNode_t *head);
 
 void
 nzxFreeListing(listing_t *listing);

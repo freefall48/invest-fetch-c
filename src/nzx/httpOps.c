@@ -62,9 +62,10 @@ nzxFetchData(void) {
     if (res != CURLE_OK) {
         fprintf(stderr, "curl_easy_perform() failed: %s\n",
                 curl_easy_strerror(res));
-    } else {
-        printf("%lu bytes retrieved\n", (unsigned long) chunk->size);
     }
+//    else {
+//        printf("%lu bytes retrieved\n", (unsigned long) chunk->size);
+//    }
 
     // Clean up and return
     curl_easy_cleanup(curl_handle);

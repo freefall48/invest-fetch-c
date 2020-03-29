@@ -105,7 +105,7 @@ to_nbo(float in, float *out) {
 }
 
 int
-nzxStoreMarketPrices(NZXNode_t *head) {
+nzxStoreMarketPrices(nzxNode_t *head) {
     PGconn *conn;
     conn = postgresConnect();
 
@@ -143,7 +143,7 @@ nzxStoreMarketPrices(NZXNode_t *head) {
 }
 
 int
-nzxStoreMarketListings(NZXNode_t *head) {
+nzxStoreMarketListings(nzxNode_t *head) {
 
     PGconn *conn;
     conn = postgresConnect();
@@ -187,7 +187,7 @@ locateData(memoryChunk_t **chunk) {
 }
 
 void
-nzxExtractMarketPrices(memoryChunk_t *chunk, NZXNode_t **head) {
+nzxExtractMarketPrices(memoryChunk_t *chunk, nzxNode_t **head) {
     char *ptr;
 
     ptr = locateData(&chunk);
@@ -207,7 +207,7 @@ nzxExtractMarketPrices(memoryChunk_t *chunk, NZXNode_t **head) {
 }
 
 void
-nzxExtractMarketListings(memoryChunk_t *chunk, NZXNode_t **head) {
+nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head) {
     char *ptr;
 
     ptr = locateData(&chunk);

@@ -27,12 +27,12 @@
 #define NZX_POSTGRES_URL "postgresql://postgres:password@localhost/invest"
 
 
-void nzxExtractMarketListings(memoryChunk_t *chunk, NZXNode_t **head);
+void nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head);
 
-void nzxExtractMarketPrices(memoryChunk_t *chunk, NZXNode_t **head);
+void nzxExtractMarketPrices(memoryChunk_t *chunk, nzxNode_t **head);
 
-int nzxStoreMarketListings(NZXNode_t *head);
+int nzxStoreMarketListings(nzxNode_t *head);
 
-int nzxStoreMarketPrices(NZXNode_t *head);
+int nzxStoreMarketPrices(nzxNode_t *head);
 
 #endif //INVEST_FETCH_C_HANDLER_H
