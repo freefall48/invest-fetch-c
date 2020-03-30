@@ -109,6 +109,10 @@ nzxStoreMarketPrices(nzxNode_t *head) {
     PGconn *conn;
     conn = postgresConnect();
 
+    if (!conn) {
+        return -1;
+    }
+
     while (head) {
         float converted; // This is now in network byte order
         to_nbo(head->listing.Price, &converted);
@@ -147,6 +151,10 @@ nzxStoreMarketListings(nzxNode_t *head) {
 
     PGconn *conn;
     conn = postgresConnect();
+
+    if (!conn) {
+        return -1;
+    }
 
     while (head) {
         const char *const paramValues[2] = {head->listing.Code, head->listing.Company};

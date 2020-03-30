@@ -41,9 +41,18 @@ calcNextRun(struct tm *ptm, task_t *task) {
     /* Check if this task has a run period that wraps over midnight UTC */
     else if (task->startHour > task->endHour) {
         if (ptm->tm_hour >= task->startHour || ptm->tm_hour < task->endHour) {
-            /* Add the offset for the next run */
-            ptm->tm_hour += task->rateHour;
-            ptm->tm_min += task->rateMinute;
+            if (task->prev != NULL) {
+                /* Add the offset for the next run */
+                ptm->tm_hour += task->rateHour;
+                ptm->tm_min += task->rateMinute;
+                mktime(ptm);
+                /* Check we are not calling after the end time. */
+                if (ptm->tm_hour >= task->endHour) {
+                    ptm->tm_hour = task->endHour;
+                    ptm->tm_min = 0;
+                    ptm->tm_sec = 0;
+                }
+            }
         } else {
             ptm->tm_hour = task->startHour;
             ptm->tm_min = 0;
@@ -77,16 +86,17 @@ calcNextRun(struct tm *ptm, task_t *task) {
 void
 taskAdd(taskNode_t **head, task_t *task) {
     /* Get the current UTC time and work out when this task next needs to be called. */
-    struct tm *ptm;
-    taskNode_t  *current;
+    struct tm *ptm, *runTime;
+    taskNode_t  *current, *node;
+
     currentUTC(&ptm);
 
     calcNextRun(ptm, task);
-    struct tm *runTime = (struct tm *) malloc(sizeof(struct tm));
+    runTime = (struct tm *) malloc(sizeof(struct tm));
     *runTime = *ptm;
     task->next = runTime;
 
-    taskNode_t *node = (taskNode_t *) malloc(sizeof(taskNode_t));
+    node = (taskNode_t *) malloc(sizeof(taskNode_t));
     node->task = *task;
     /* Check if the queue is empty of the task should be the first in the queue. */
     if (*head == NULL || mktime(((*head)->task.next)) >= mktime((node->task.next))) {
@@ -108,7 +118,7 @@ taskAdd(taskNode_t **head, task_t *task) {
 void
 taskProcessor(taskNode_t **head)
 {
-    threadPool_t *threadPool = thrPoolCreate(1, 1, 120, NULL);
+    threadPool_t *threadPool = thrPoolCreate(1, 2, 120, NULL);
     while (1) {
         /* Get the current UTC time. */
         struct tm *ptm;
@@ -124,16 +134,18 @@ taskProcessor(taskNode_t **head)
         long int duration = mktime(task.next) - mktime(ptm);
         /* Sleep if we need to. */
         if (duration > 0) {
-            printf("Waiting until %s", asctime(task.next));
+            printf("[Scheduler] Waiting until %s", asctime(task.next));
             sleep(duration);
         }
         thrPoolQueue(threadPool, task.func, NULL);
+        printf("[Scheduler] Sent task '%d' to worker pool queue\n", task.id);
         task.prev = task.next;
         /* Free up memory allocations. */
         if (task.prev != NULL) {
             free(task.prev);
         }
         /* Add the task back into the queue. */
+        free(*head);
         (*head) = next;
         taskAdd(head, &task);
     }

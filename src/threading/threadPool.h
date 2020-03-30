@@ -13,6 +13,9 @@
 #include <errno.h>
 #include <stdint.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 /*
  * The threadPool_t type is opaque to the client.

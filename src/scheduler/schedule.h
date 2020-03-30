@@ -26,6 +26,8 @@ typedef struct Task {
     struct tm *next;
     struct tm *prev;
 
+    uint8_t id;
+
     /*
      * The function to call when the timer elapses.
      */

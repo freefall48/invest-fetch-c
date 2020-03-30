@@ -65,10 +65,10 @@ createWorker(threadPool_t *pool) {
     int error;
     pthread_t thread; /* Do not need to keep a reference to this thread. */
 
-    (void) pthread_sigmask(SIG_SETMASK, &signalSet, &oset);
+    pthread_sigmask(SIG_SETMASK, &signalSet, &oset);
     error = pthread_create(&thread, &pool->pool_attr, workerThread, pool);
-    (void) pthread_sigmask(SIG_SETMASK, &oset, NULL);
-    return (error);
+    pthread_sigmask(SIG_SETMASK, &oset, NULL);
+    return error;
 }
 
 /*
@@ -91,14 +91,14 @@ workerCleanup(void *arg) {
                createWorker(pool) == 0) {
         pool->pool_nthreads++;
     }
-    (void) pthread_mutex_unlock(&pool->pool_mutex);
+    pthread_mutex_unlock(&pool->pool_mutex);
 }
 
 static void
 notify_waiters(threadPool_t *pool) {
     if (pool->pool_head == NULL && pool->pool_active == NULL) {
         pool->pool_flags &= ~POOL_WAIT;
-        (void) pthread_cond_broadcast(&pool->pool_waitcv);
+        pthread_cond_broadcast(&pool->pool_waitcv);
     }
 }
 
@@ -113,7 +113,7 @@ jobCleanup(void *arg) {
 
     threadPool_t *pool = (threadPool_t *) arg;
 
-    (void) pthread_mutex_lock(&pool->pool_mutex);
+    pthread_mutex_lock(&pool->pool_mutex);
     for (activepp = &pool->pool_active;
          (activep = *activepp) != NULL;
          activepp = &activep->active_next) {
@@ -139,18 +139,19 @@ workerThread(void *arg) {
      * This is the worker's main loop.  It will only be left
      * if a timeout occurs or if the pool is being destroyed.
      */
-    (void) pthread_mutex_lock(&pool->pool_mutex);
+    pthread_mutex_lock(&pool->pool_mutex);
     pthread_cleanup_push(workerCleanup, pool)
             active.active_tid = pthread_self();
+            printf("[Threading] Thread (%lu) added to pool.\n", active.active_tid);
             for (;;) {
                 /*
                  * We don't know what this thread was doing during
                  * its last job, so we reset its signal mask and
                  * cancellation state back to the initial values.
                  */
-                (void) pthread_sigmask(SIG_SETMASK, &signalSet, NULL);
-                (void) pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
-                (void) pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+                pthread_sigmask(SIG_SETMASK, &signalSet, NULL);
+                pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+                pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
                 timedout = 0;
                 pool->pool_idle++;
@@ -159,14 +160,12 @@ workerThread(void *arg) {
                 while (pool->pool_head == NULL &&
                        !(pool->pool_flags & POOL_DESTROY)) {
                     if (pool->pool_nthreads <= pool->pool_minimum) {
-                        (void) pthread_cond_wait(&pool->pool_workcv,
-                                                 &pool->pool_mutex);
+                        (void) pthread_cond_wait(&pool->pool_workcv, &pool->pool_mutex);
                     } else {
                         (void) clock_gettime(CLOCK_REALTIME, &ts);
                         ts.tv_sec += pool->pool_linger;
                         if (pool->pool_linger == 0 ||
-                            pthread_cond_timedwait(&pool->pool_workcv,
-                                                   &pool->pool_mutex, &ts) == ETIMEDOUT) {
+                            pthread_cond_timedwait(&pool->pool_workcv, &pool->pool_mutex, &ts) == ETIMEDOUT) {
                             timedout = 1;
                             break;
                         }
@@ -184,13 +183,13 @@ workerThread(void *arg) {
                         pool->pool_tail = NULL;
                     active.active_next = pool->pool_active;
                     pool->pool_active = &active;
-                    (void) pthread_mutex_unlock(&pool->pool_mutex);
+                    pthread_mutex_unlock(&pool->pool_mutex);
                     pthread_cleanup_push(jobCleanup, pool)
                             free(job);
                             /*
                              * Call the specified job function.
                              */
-                            (void) func(arg);
+                            func(arg);
                             /*
                              * If the job function calls pthread_exit(), the thread
                              * calls jobCleanup(pool) and workerCleanup(pool);
@@ -207,8 +206,9 @@ workerThread(void *arg) {
                     break;
                 }
             }
+            printf("[Threading] Thread (%lu) removed from pool.\n", active.active_tid);
     pthread_cleanup_pop(1);    /* workerCleanup(pool) */
-    return (NULL);
+    return NULL;
 }
 
 static void
@@ -218,39 +218,38 @@ clone_attributes(pthread_attr_t *new_attr, pthread_attr_t *old_attr) {
     size_t size;
     int value;
 
-    (void) pthread_attr_init(new_attr);
+    pthread_attr_init(new_attr);
 
     if (old_attr != NULL) {
-        (void) pthread_attr_getstack(old_attr, &addr, &size);
+        pthread_attr_getstack(old_attr, &addr, &size);
         /* don't allow a non-NULL thread stack address */
-        (void) pthread_attr_setstack(new_attr, NULL, size);
+        pthread_attr_setstack(new_attr, NULL, size);
 
-        (void) pthread_attr_getscope(old_attr, &value);
-        (void) pthread_attr_setscope(new_attr, value);
+        pthread_attr_getscope(old_attr, &value);
+        pthread_attr_setscope(new_attr, value);
 
-        (void) pthread_attr_getinheritsched(old_attr, &value);
-        (void) pthread_attr_setinheritsched(new_attr, value);
+        pthread_attr_getinheritsched(old_attr, &value);
+        pthread_attr_setinheritsched(new_attr, value);
 
-        (void) pthread_attr_getschedpolicy(old_attr, &value);
-        (void) pthread_attr_setschedpolicy(new_attr, value);
+        pthread_attr_getschedpolicy(old_attr, &value);
+        pthread_attr_setschedpolicy(new_attr, value);
 
-        (void) pthread_attr_getschedparam(old_attr, &param);
-        (void) pthread_attr_setschedparam(new_attr, &param);
+        pthread_attr_getschedparam(old_attr, &param);
+        pthread_attr_setschedparam(new_attr, &param);
 
-        (void) pthread_attr_getguardsize(old_attr, &size);
-        (void) pthread_attr_setguardsize(new_attr, size);
+        pthread_attr_getguardsize(old_attr, &size);
+        pthread_attr_setguardsize(new_attr, size);
     }
 
     /* make all pool threads be detached threads */
-    (void) pthread_attr_setdetachstate(new_attr, PTHREAD_CREATE_DETACHED);
+    pthread_attr_setdetachstate(new_attr, PTHREAD_CREATE_DETACHED);
 }
 
 threadPool_t *
-thrPoolCreate(uint16_t min_threads, uint16_t max_threads, uint16_t linger,
-              pthread_attr_t *attr) {
+thrPoolCreate(uint16_t min_threads, uint16_t max_threads, uint16_t linger, pthread_attr_t *attr) {
     threadPool_t *pool;
 
-    (void) sigfillset(&signalSet);
+    sigfillset(&signalSet);
 
     if (min_threads > max_threads || max_threads < 1) {
         errno = EINVAL;
@@ -261,10 +260,10 @@ thrPoolCreate(uint16_t min_threads, uint16_t max_threads, uint16_t linger,
         errno = ENOMEM;
         return (NULL);
     }
-    (void) pthread_mutex_init(&pool->pool_mutex, NULL);
-    (void) pthread_cond_init(&pool->pool_busycv, NULL);
-    (void) pthread_cond_init(&pool->pool_workcv, NULL);
-    (void) pthread_cond_init(&pool->pool_waitcv, NULL);
+    pthread_mutex_init(&pool->pool_mutex, NULL);
+    pthread_cond_init(&pool->pool_busycv, NULL);
+    pthread_cond_init(&pool->pool_workcv, NULL);
+    pthread_cond_init(&pool->pool_waitcv, NULL);
     pool->pool_active = NULL;
     pool->pool_head = NULL;
     pool->pool_tail = NULL;
@@ -285,7 +284,7 @@ thrPoolCreate(uint16_t min_threads, uint16_t max_threads, uint16_t linger,
     clone_attributes(&pool->pool_attr, attr);
 
     /* insert into the global list of all thread pools */
-    (void) pthread_mutex_lock(&thrPoolLock);
+    pthread_mutex_lock(&thrPoolLock);
     if (thrPools == NULL) {
         pool->pool_forw = pool;
         pool->pool_back = pool;
@@ -296,9 +295,9 @@ thrPoolCreate(uint16_t min_threads, uint16_t max_threads, uint16_t linger,
         pool->pool_back = thrPools->pool_back;
         thrPools->pool_back = pool;
     }
-    (void) pthread_mutex_unlock(&thrPoolLock);
+    pthread_mutex_unlock(&thrPoolLock);
 
-    return (pool);
+    return pool;
 }
 
 int
@@ -313,7 +312,7 @@ thrPoolQueue(threadPool_t *pool, void *(*func)(void *), void *arg) {
     job->job_func = func;
     job->job_arg = arg;
 
-    (void) pthread_mutex_lock(&pool->pool_mutex);
+    pthread_mutex_lock(&pool->pool_mutex);
 
     if (pool->pool_head == NULL)
         pool->pool_head = job;
@@ -334,7 +333,7 @@ thrPoolQueue(threadPool_t *pool, void *(*func)(void *), void *arg) {
 
 void
 thrPoolWait(threadPool_t *pool) {
-    (void) pthread_mutex_lock(&pool->pool_mutex);
+    pthread_mutex_lock(&pool->pool_mutex);
     pthread_cleanup_push((void *) pthread_mutex_unlock, &pool->pool_mutex)
             while (pool->pool_head != NULL || pool->pool_active != NULL) {
                 pool->pool_flags |= POOL_WAIT;
@@ -348,35 +347,35 @@ thrPoolDestroy(threadPool_t *pool) {
     active_t *activep;
     job_t *job;
 
-    (void) pthread_mutex_lock(&pool->pool_mutex);
+    pthread_mutex_lock(&pool->pool_mutex);
     pthread_cleanup_push((void *) pthread_mutex_unlock, &pool->pool_mutex)
 
             /* mark the pool as being destroyed; wakeup idle workers */
             pool->pool_flags |= POOL_DESTROY;
-            (void) pthread_cond_broadcast(&pool->pool_workcv);
+            pthread_cond_broadcast(&pool->pool_workcv);
 
             /* cancel all active workers */
             for (activep = pool->pool_active;
                  activep != NULL;
                  activep = activep->active_next)
-                (void) pthread_cancel(activep->active_tid);
+                pthread_cancel(activep->active_tid);
 
             /* wait for all active workers to finish */
             while (pool->pool_active != NULL) {
                 pool->pool_flags |= POOL_WAIT;
-                (void) pthread_cond_wait(&pool->pool_waitcv, &pool->pool_mutex);
+                pthread_cond_wait(&pool->pool_waitcv, &pool->pool_mutex);
             }
 
             /* the last worker to terminate will wake us up */
             while (pool->pool_nthreads != 0)
-                (void) pthread_cond_wait(&pool->pool_busycv, &pool->pool_mutex);
+                pthread_cond_wait(&pool->pool_busycv, &pool->pool_mutex);
 
     pthread_cleanup_pop(1);    /* pthread_mutex_unlock(&pool->pool_mutex); */
 
     /*
      * Unlink the pool from the global list of all pools.
      */
-    (void) pthread_mutex_lock(&thrPoolLock);
+    pthread_mutex_lock(&thrPoolLock);
     if (thrPools == pool)
         thrPools = pool->pool_forw;
     if (thrPools == pool)
@@ -385,7 +384,7 @@ thrPoolDestroy(threadPool_t *pool) {
         pool->pool_back->pool_forw = pool->pool_forw;
         pool->pool_forw->pool_back = pool->pool_back;
     }
-    (void) pthread_mutex_unlock(&thrPoolLock);
+    pthread_mutex_unlock(&thrPoolLock);
 
     /*
      * There should be no pending jobs, but just in case...
@@ -394,6 +393,6 @@ thrPoolDestroy(threadPool_t *pool) {
         pool->pool_head = job->job_next;
         free(job);
     }
-    (void) pthread_attr_destroy(&pool->pool_attr);
+    pthread_attr_destroy(&pool->pool_attr);
     free(pool);
 }
