@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include <curl/curl.h>
+#include "../logging/logger.h"
 
 #define NZX_URL "https://www.nzx.com/markets/NZSX"
 
@@ -20,7 +21,7 @@ typedef struct MemoryChunk {
 } memoryChunk_t;
 
 
-memoryChunk_t *nzxFetchData(void);
+memoryChunk_t *nzxFetchData(logger_t *logger);
 
 void nzxFreeMemoryChunk(memoryChunk_t *chunk);
 

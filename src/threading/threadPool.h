@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include "../logging/logger.h"
 
 /*
  * The threadPool_t type is opaque to the client.
@@ -36,7 +37,8 @@ typedef	struct ThreadPool threadPool_t;
  *			can be destroyed after calling thr_pool_create().
  * On error, thrPoolCreate() returns NULL with errno set to the error code.
  */
-threadPool_t *thrPoolCreate(uint16_t min_threads, uint16_t max_threads, uint16_t linger, pthread_attr_t *attr);
+threadPool_t *thrPoolCreate(uint16_t min_threads, uint16_t max_threads, uint16_t linger, pthread_attr_t *attr,
+                            logger_t *logger);
 
 /*
  * Enqueue a work request to the thread pool job queue.

@@ -5,49 +5,46 @@
 
 #include <stdio.h>
 #include <curl/curl.h>
+#include "logging/logger.h"
 
 #include "nzx/handler.h"
 #include "scheduler/schedule.h"
 
-void*
-collectListings(void *args)
-{
-//    printf("Collecting listings...");
-//    fflush(stdout);
+void *
+collectListings(void *args) {
+    logger_t *logger = (logger_t *) args;
     /* Download the market data. */
-    memoryChunk_t *chunk = nzxFetchData();
+    memoryChunk_t *chunk = nzxFetchData(logger);
     nzxNode_t *head = NULL;
     /* Process and store the market listings. */
-    nzxExtractMarketListings(chunk, &head);
-    nzxStoreMarketListings(head);
+    nzxExtractMarketListings(chunk, &head, logger);
+    nzxStoreMarketListings(head, logger);
     /* Finished with the data so free the memory. */
-    nzxDrainListings(&head);
+    nzxDrainListings(&head, logger);
     nzxFreeMemoryChunk(chunk);
-//    printf("done\n");
     return NULL;
 }
 
-void*
-collectPrices(void *args)
-{
-//    printf("Collecting prices...");
-//    fflush(stdout);
+void *
+collectPrices(void *args) {
+    logger_t *logger = (logger_t *) args;
     /* Download the market data. */
-    memoryChunk_t *chunk = nzxFetchData();
+    memoryChunk_t *chunk = nzxFetchData(logger);
     nzxNode_t *head = NULL;
     /* Process and store the market listings. */
-    nzxExtractMarketPrices(chunk, &head);
-    nzxStoreMarketPrices(head);
+    nzxExtractMarketPrices(chunk, &head, logger);
+    nzxStoreMarketPrices(head, logger);
     /* Finished with the data so free the memory. */
-    nzxDrainListings(&head);
+    nzxDrainListings(&head, logger);
     nzxFreeMemoryChunk(chunk);
-//    printf("done\n");
     return NULL;
 }
 
 int main() {
     curl_global_init(CURL_GLOBAL_NOTHING);
-    taskNode_t* head = NULL;
+    logger_t *logger = createLogger(0, DEBUG);
+
+    taskNode_t *head = NULL;
     task_t taskListings = {
             .startHour = 21,
             .endHour = 6,
@@ -69,6 +66,9 @@ int main() {
     taskAdd(&head, &taskListings);
     taskAdd(&head, &taskPrices);
 
-    taskProcessor(&head);
+    taskProcessor(logger, &head);
     curl_global_cleanup();
+
+
+
 }

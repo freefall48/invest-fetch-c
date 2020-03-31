@@ -35,7 +35,6 @@ static PGconn *postgresConnect(void) {
     }
     /* check if the connection attempt worked */
     if (PQstatus(conn) != CONNECTION_OK) {
-        fprintf(stderr, "%s\n", PQerrorMessage(conn));
         /*
          * Even if the connection failed, the PGconn structure has been
          * allocated and must be freed.
@@ -105,11 +104,12 @@ to_nbo(float in, float *out) {
 }
 
 int
-nzxStoreMarketPrices(nzxNode_t *head) {
+nzxStoreMarketPrices(nzxNode_t *head, logger_t *logger) {
     PGconn *conn;
     conn = postgresConnect();
 
     if (!conn) {
+        logCrit(logger, "[Executors] Failed to connect to the Postgres server.")
         return -1;
     }
 
@@ -133,11 +133,13 @@ nzxStoreMarketPrices(nzxNode_t *head) {
                 0);
 
         if (res == NULL) {
-            printf("%s\n", PQerrorMessage(conn));
+            logError(logger, "[Executors] Problem is: %s", PQerrorMessage(conn))
         }
 
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            printf(" Problem is: %s\n", PQerrorMessage(conn));
+            logError(logger, "[Executors] Problem is: %s", PQerrorMessage(conn))
+        } else {
+            logDebug(logger, "[Executors] Inserted into Postgres successfully.")
         }
         head = head->next;
         PQclear(res);
@@ -147,12 +149,13 @@ nzxStoreMarketPrices(nzxNode_t *head) {
 }
 
 int
-nzxStoreMarketListings(nzxNode_t *head) {
+nzxStoreMarketListings(nzxNode_t *head, logger_t *logger) {
 
     PGconn *conn;
     conn = postgresConnect();
 
     if (!conn) {
+        logCrit(logger, "[Executors] Failed to connect to the Postgres server.")
         return -1;
     }
 
@@ -170,11 +173,13 @@ nzxStoreMarketListings(nzxNode_t *head) {
                 0);
 
         if (res == NULL) {
-            printf("%s\n", PQerrorMessage(conn));
+            logError(logger, "[Executors] Problem is: %s", PQerrorMessage(conn))
         }
 
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            printf(" Problem is: %s\n", PQerrorMessage(conn));
+            logError(logger, "[Executors] Problem is: %s", PQerrorMessage(conn))
+        } else {
+            logDebug(logger, "[Executors] Inserted into Postgres successfully.")
         }
         head = head->next;
         PQclear(res);
@@ -195,12 +200,13 @@ locateData(memoryChunk_t **chunk) {
 }
 
 void
-nzxExtractMarketPrices(memoryChunk_t *chunk, nzxNode_t **head) {
+nzxExtractMarketPrices(memoryChunk_t *chunk, nzxNode_t **head, logger_t *logger) {
     char *ptr;
 
     ptr = locateData(&chunk);
     // Check there is actually a table in the HTML downloaded
     if (!ptr) {
+        logError(logger, "[Executors] Invalid html. Contains no data.")
         return;
     }
 
@@ -215,12 +221,13 @@ nzxExtractMarketPrices(memoryChunk_t *chunk, nzxNode_t **head) {
 }
 
 void
-nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head) {
+nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head, logger_t *logger) {
     char *ptr;
 
     ptr = locateData(&chunk);
     // Check there is actually a table in the HTML downloaded
     if (!ptr) {
+        logError(logger, "[Executors] Invalid html. Contains no data.")
         return;
     }
 

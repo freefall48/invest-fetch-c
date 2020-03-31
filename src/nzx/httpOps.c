@@ -40,7 +40,7 @@ writeMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp) {
 }
 
 memoryChunk_t *
-nzxFetchData(void) {
+nzxFetchData(logger_t *logger) {
     CURL *curl_handle;
     CURLcode res;
 

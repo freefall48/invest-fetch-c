@@ -13,6 +13,7 @@
 #include <time.h>
 
 #include "../threading/threadPool.h"
+#include "../logging/logger.h"
 
 typedef struct Task {
     /*
@@ -41,6 +42,6 @@ typedef struct TaskNode {
 
 void taskAdd(taskNode_t **head, task_t *task);
 
-void taskProcessor(taskNode_t **head);
+void taskProcessor(logger_t *logger, taskNode_t **head);
 
 #endif //INVEST_FETCH_C_SCHEDULE_H

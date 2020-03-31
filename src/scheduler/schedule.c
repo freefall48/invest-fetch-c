@@ -116,9 +116,9 @@ taskAdd(taskNode_t **head, task_t *task) {
 }
 
 void
-taskProcessor(taskNode_t **head)
+taskProcessor(logger_t *logger, taskNode_t **head)
 {
-    threadPool_t *threadPool = thrPoolCreate(1, 2, 120, NULL);
+    threadPool_t *threadPool = thrPoolCreate(1, 2, 120, NULL, logger);
     while (1) {
         /* Get the current UTC time. */
         struct tm *ptm;
@@ -134,11 +134,16 @@ taskProcessor(taskNode_t **head)
         long int duration = mktime(task.next) - mktime(ptm);
         /* Sleep if we need to. */
         if (duration > 0) {
-            printf("[Scheduler] Waiting until %s", asctime(task.next));
+            char buffer[80];
+            /* Produce the date/time in a format that is easy to read in log files etc. */
+            strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", task.next);
+            logInfo(logger, "[Scheduler] Waiting until %s.", buffer)
             sleep(duration);
         }
-        thrPoolQueue(threadPool, task.func, NULL);
-        printf("[Scheduler] Sent task '%d' to worker pool queue\n", task.id);
+        if (thrPoolQueue(threadPool, task.func, logger) == -1) {
+            logError(logger, "Failed to send task '%d' to worker pool queue.", task.id)
+        }
+        logInfo(logger, "[Scheduler] Sent task '%d' to worker pool queue.", task.id)
         task.prev = task.next;
         /* Free up memory allocations. */
         if (task.prev != NULL) {

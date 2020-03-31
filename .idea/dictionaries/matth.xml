@@ -5,11 +5,13 @@
       <w>activepp</w>
       <w>addr</w>
       <w>busycv</w>
+      <w>crit</w>
       <w>errno</w>
       <w>forw</w>
       <w>gconn</w>
       <w>httpops</w>
       <w>khtml</w>
+      <w>loglevel</w>
       <w>nmemb</w>
       <w>nthreads</w>
       <w>oset</w>

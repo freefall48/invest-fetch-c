@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "../logging/logger.h"
 
 typedef struct Listing {
     // Company Markers
@@ -28,7 +29,7 @@ typedef struct NZXNode {
     struct NZXNode *next;
 } nzxNode_t;
 
-void nzxDrainListings(nzxNode_t **head);
+void nzxDrainListings(nzxNode_t **head, logger_t *logger);
 
 void nzxPushListing(nzxNode_t **head, listing_t entry);
 

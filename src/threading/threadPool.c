@@ -42,6 +42,7 @@ struct ThreadPool {
     int pool_maximum;    /* maximum number of worker threads */
     int pool_nthreads;    /* current number of worker threads */
     int pool_idle;    /* number of idle workers */
+    logger_t *logger; /* Logger to output to */
 };
 
 /* pool_flags */
@@ -142,7 +143,7 @@ workerThread(void *arg) {
     pthread_mutex_lock(&pool->pool_mutex);
     pthread_cleanup_push(workerCleanup, pool)
             active.active_tid = pthread_self();
-            printf("[Threading] Thread (%lu) added to pool.\n", active.active_tid);
+            logInfo(pool->logger, "[Threading] Thread (%lu) added to pool.", active.active_tid)
             for (;;) {
                 /*
                  * We don't know what this thread was doing during
@@ -206,7 +207,7 @@ workerThread(void *arg) {
                     break;
                 }
             }
-            printf("[Threading] Thread (%lu) removed from pool.\n", active.active_tid);
+            logInfo(pool->logger, "[Threading] Thread (%lu) removed from pool.", active.active_tid)
     pthread_cleanup_pop(1);    /* workerCleanup(pool) */
     return NULL;
 }
@@ -246,7 +247,7 @@ clone_attributes(pthread_attr_t *new_attr, pthread_attr_t *old_attr) {
 }
 
 threadPool_t *
-thrPoolCreate(uint16_t min_threads, uint16_t max_threads, uint16_t linger, pthread_attr_t *attr) {
+thrPoolCreate(uint16_t min_threads, uint16_t max_threads, uint16_t linger, pthread_attr_t *attr, logger_t *logger) {
     threadPool_t *pool;
 
     sigfillset(&signalSet);
@@ -273,6 +274,7 @@ thrPoolCreate(uint16_t min_threads, uint16_t max_threads, uint16_t linger, pthre
     pool->pool_maximum = max_threads;
     pool->pool_nthreads = 0;
     pool->pool_idle = 0;
+    pool->logger = logger;
 
     /*
      * We cannot just copy the attribute pointer.
