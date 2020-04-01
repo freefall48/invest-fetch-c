@@ -23,11 +23,11 @@
 #define GENERATE_LOGGER_ENUM(ENUM) ENUM,
 #define GENERATE_LOGGER_STRING(STRING) #STRING,
 
-#define logDebug(LOGGER, ...) loggerLog(LOGGER, DEBUG, __VA_ARGS__);
-#define logInfo(LOGGER, ...) loggerLog(LOGGER, INFO, __VA_ARGS__);
-#define logWarn(LOGGER, ...) loggerLog(LOGGER, WARN, __VA_ARGS__);
-#define logError(LOGGER, ...) loggerLog(LOGGER, ERROR, __VA_ARGS__);
-#define logCrit(LOGGER, ...) loggerLog(LOGGER, CRIT, __VA_ARGS__);
+#define logDebug(LOGGER, ...) loggerLog(DEBUG, __VA_ARGS__);
+#define logInfo(LOGGER, ...) loggerLog(INFO, __VA_ARGS__);
+#define logWarn(LOGGER, ...) loggerLog(WARN, __VA_ARGS__);
+#define logError(LOGGER, ...) loggerLog(ERROR, __VA_ARGS__);
+#define logCrit(LOGGER, ...) loggerLog(CRIT, __VA_ARGS__);
 
 typedef enum LogLevel {
     FOREACH_LOGLEVEL(GENERATE_LOGGER_ENUM)
@@ -41,8 +41,8 @@ typedef enum LogLevel {
 typedef struct Logger logger_t;
 
 
-void loggerLog(logger_t *logger, LogLevel logLevel, const char *fmt, ...);
+void loggerLog(LogLevel logLevel, const char *fmt, ...);
 
-logger_t *createLogger(uint8_t silent, uint8_t minimumLevel);
+void loggerInit(uint8_t silent, uint8_t minimumLevel);
 
 #endif //INVEST_FETCH_C_LOGGER_H
