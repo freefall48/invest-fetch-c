@@ -23,23 +23,15 @@
 #define GENERATE_LOGGER_ENUM(ENUM) ENUM,
 #define GENERATE_LOGGER_STRING(STRING) #STRING,
 
-#define logDebug(LOGGER, ...) loggerLog(DEBUG, __VA_ARGS__);
-#define logInfo(LOGGER, ...) loggerLog(INFO, __VA_ARGS__);
-#define logWarn(LOGGER, ...) loggerLog(WARN, __VA_ARGS__);
-#define logError(LOGGER, ...) loggerLog(ERROR, __VA_ARGS__);
-#define logCrit(LOGGER, ...) loggerLog(CRIT, __VA_ARGS__);
+#define logDebug(...) loggerLog(DEBUG, __VA_ARGS__);
+#define logInfo(...) loggerLog(INFO, __VA_ARGS__);
+#define logWarn(...) loggerLog(WARN, __VA_ARGS__);
+#define logError(...) loggerLog(ERROR, __VA_ARGS__);
+#define logCrit(...) loggerLog(CRIT, __VA_ARGS__);
 
 typedef enum LogLevel {
     FOREACH_LOGLEVEL(GENERATE_LOGGER_ENUM)
 } LogLevel;
-
-/*
- * The logger_t type is opaque to the client.
- * It is created by createLogger() and must be passed
- * unmodified to the remainder of the interfaces.
- */
-typedef struct Logger logger_t;
-
 
 void loggerLog(LogLevel logLevel, const char *fmt, ...);
 

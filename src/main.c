@@ -42,7 +42,7 @@ collectPrices(void *args) {
 
 int main() {
     curl_global_init(CURL_GLOBAL_NOTHING);
-    logger_t *logger = createLogger(0, DEBUG);
+    loggerInit(0, DEBUG);
 
     taskNode_t *head = NULL;
     task_t taskListings = {

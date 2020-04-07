@@ -4,9 +4,18 @@
 //
 #include "schedule.h"
 
+struct schedulerTask {
+
+    time_t next;
+
+    char *cronExpression;
+
+    void *(*func)(void *);
+
+};
+
 static void
-currentUTC(struct tm **ptm)
-{
+currentUTC(struct tm **ptm) {
     time_t now = time(&now);
     /* Check that we actually got a time. */
     if (now == -1) {
@@ -21,73 +30,20 @@ currentUTC(struct tm **ptm)
     (*ptm)->tm_isdst = -1;
 }
 
-static void
-calcNextRun(struct tm *ptm, task_t *task) {
-    /* Check if this task should only be repeated daily. */
-    if (task->startHour == task->endHour) {
-        /* Check if this task has been run before. */
-        if (ptm->tm_hour > task->startHour) {
-            ptm->tm_hour = task->startHour;
-            ptm->tm_min = 0;
-            ptm->tm_sec = 0;
-        } else {
-            /* Add a day so its called tomorrow. */
-            ptm->tm_mday += 1;
-            ptm->tm_hour = task->startHour;
-            ptm->tm_min = 0;
-            ptm->tm_sec = 0;
-        }
-    }
-    /* Check if this task has a run period that wraps over midnight UTC */
-    else if (task->startHour > task->endHour) {
-        if (ptm->tm_hour >= task->startHour || ptm->tm_hour < task->endHour) {
-            if (task->prev != NULL) {
-                /* Add the offset for the next run */
-                ptm->tm_hour += task->rateHour;
-                ptm->tm_min += task->rateMinute;
-                mktime(ptm);
-                /* Check we are not calling after the end time. */
-                if (ptm->tm_hour >= task->endHour) {
-                    ptm->tm_hour = task->endHour;
-                    ptm->tm_min = 0;
-                    ptm->tm_sec = 0;
-                }
-            }
-        } else {
-            ptm->tm_hour = task->startHour;
-            ptm->tm_min = 0;
-            ptm->tm_sec = 0;
-        }
-    } else {
-        if (ptm->tm_hour >= task->startHour && ptm->tm_hour < task->endHour) {
-            /* Add the offset for the next run */
-            ptm->tm_hour += task->rateHour;
-            ptm->tm_min += task->rateMinute;
-        } else {
-            /* Check if this task has been run before. */
-            if (ptm->tm_hour > task->startHour) {
-                ptm->tm_hour = task->startHour;
-                ptm->tm_min = 0;
-                ptm->tm_sec = 0;
-            } else {
-                /* Add a day so its called tomorrow. */
-                ptm->tm_mday += 1;
-                ptm->tm_hour = task->startHour;
-                ptm->tm_min = 0;
-                ptm->tm_sec = 0;
-            }
-        }
-    }
-    /* Reform the tm struct to represent the changes to time and handle
-     * any overflows caused. */
-    mktime(ptm);
-}
-
 void
 taskAdd(taskNode_t **head, task_t *task) {
     /* Get the current UTC time and work out when this task next needs to be called. */
     struct tm *ptm, *runTime;
-    taskNode_t  *current, *node;
+    taskNode_t *current, *node;
+    cron_expr expr;
+    const char *err = NULL;
+
+    memset(&expr, 0, sizeof(expr));
+    cron_parse_expr(task->cronExpression, &expr, w & err);
+
+    if (err) {
+        // TODO: Error
+    }
 
     currentUTC(&ptm);
 

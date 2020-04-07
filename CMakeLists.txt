@@ -8,7 +8,7 @@ find_package(CURL REQUIRED)
 find_package(PostgreSQL REQUIRED)
 find_package(Threads REQUIRED)
 
-add_executable(invest_fetch_c src/main.c src/nzx/models.c src/nzx/models.h src/nzx/handler.c src/nzx/handler.h src/nzx/httpOps.h src/nzx/httpOps.c src/scheduler/schedule.c src/scheduler/schedule.h src/threading/threadPool.c src/threading/threadPool.h src/logging/logger.c src/logging/logger.h)
+add_executable(invest_fetch_c src/main.c src/nzx/models.c src/nzx/models.h src/nzx/handler.c src/nzx/handler.h src/nzx/httpOps.h src/nzx/httpOps.c src/scheduler/schedule.c src/scheduler/schedule.h src/threading/threadPool.c src/threading/threadPool.h src/logging/logger.c src/logging/logger.h src/lib/cron.c src/lib/cron.h)
 
 target_include_directories(invest_fetch_c PRIVATE ${CURL_INCLUDE_DIR})
 target_include_directories(invest_fetch_c PRIVATE ${PostgreSQL_INCLUDE_DIRS})
