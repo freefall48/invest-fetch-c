@@ -28,4 +28,6 @@ void taskAdd(taskNode_t **head, task_t *task);
 
 void taskProcessor(taskNode_t **head);
 
+task_t *taskCreate(const char *exePattern, void *(*func)(void *));
+
 #endif //INVEST_FETCH_C_SCHEDULE_H

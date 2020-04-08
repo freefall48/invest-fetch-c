@@ -6,7 +6,7 @@
 #include "models.h"
 
 void
-nzxDrainListings(nzxNode_t **head, logger_t *logger)
+nzxDrainListings(nzxNode_t **head)
 {
     listing_t *current = nzxPopListing(head);
     while (current) {

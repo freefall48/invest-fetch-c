@@ -29,7 +29,7 @@ typedef struct NZXNode {
     struct NZXNode *next;
 } nzxNode_t;
 
-void nzxDrainListings(nzxNode_t **head, logger_t *logger);
+void nzxDrainListings(nzxNode_t **head);
 
 void nzxPushListing(nzxNode_t **head, listing_t entry);
 

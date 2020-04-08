@@ -21,7 +21,7 @@ typedef struct MemoryChunk {
 } memoryChunk_t;
 
 
-memoryChunk_t *nzxFetchData(logger_t *logger);
+memoryChunk_t *nzxFetchData(void);
 
 void nzxFreeMemoryChunk(memoryChunk_t *chunk);
 

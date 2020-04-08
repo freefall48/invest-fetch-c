@@ -8,62 +8,52 @@ struct schedulerTask {
 
     time_t next;
 
-    char *cronExpression;
+    const char *cronExpression;
 
     void *(*func)(void *);
 
 };
 
-static void
-currentUTC(struct tm **ptm) {
-    time_t now = time(&now);
-    /* Check that we actually got a time. */
-    if (now == -1) {
-        puts("Failed to get the current time.");
-    }
-    /* Now get the GMT time and check the conversion. */
-    *ptm = gmtime(&now);
-    if (ptm == NULL) {
-        puts("Failed to convert to GMT time");
-    }
-    /* Stop Daylight savings as UTC does not use this. */
-    (*ptm)->tm_isdst = -1;
+task_t *
+taskCreate(const char *exePattern, void *(*func)(void *)) {
+    task_t *task = (task_t *) malloc(sizeof(task_t));
+
+    task->func = func;
+    task->cronExpression = exePattern;
+
+    return task;
 }
 
 void
 taskAdd(taskNode_t **head, task_t *task) {
     /* Get the current UTC time and work out when this task next needs to be called. */
-    struct tm *ptm, *runTime;
     taskNode_t *current, *node;
     cron_expr expr;
     const char *err = NULL;
 
     memset(&expr, 0, sizeof(expr));
-    cron_parse_expr(task->cronExpression, &expr, w & err);
+    cron_parse_expr(task->cronExpression, &expr, &err);
 
     if (err) {
-        // TODO: Error
+        logError("Error in CRON expression")
+        return;
     }
 
-    currentUTC(&ptm);
+    time_t cur = time(NULL);
+    time_t next = cron_next(&expr, cur);
 
-    calcNextRun(ptm, task);
-    runTime = (struct tm *) malloc(sizeof(struct tm));
-    *runTime = *ptm;
-    task->next = runTime;
+    task->next = next;
 
     node = (taskNode_t *) malloc(sizeof(taskNode_t));
-    node->task = *task;
+    node->task = task;
     /* Check if the queue is empty of the task should be the first in the queue. */
-    if (*head == NULL || mktime(((*head)->task.next)) >= mktime((node->task.next))) {
+    if (*head == NULL || ((*head)->task->next >= node->task->next)) {
         node->next = *head;
         *head = node;
-    }
-    else {
+    } else {
         current = *head;
         /* Move to the correct position this task should be added. */
-        while (current->next != NULL && mktime((current->next->task.next)) < mktime((node->task.next)))
-        {
+        while (current->next != NULL && (current->next->task->next < node->task->next)) {
             current = current->next;
         }
         node->next = current->next;
@@ -72,43 +62,36 @@ taskAdd(taskNode_t **head, task_t *task) {
 }
 
 void
-taskProcessor(logger_t *logger, taskNode_t **head)
+taskProcessor(taskNode_t **head)
 {
-    threadPool_t *threadPool = thrPoolCreate(1, 2, 120, NULL, logger);
+    threadPool_t *threadPool = thrPoolCreate(1, 2, 120, NULL);
     while (1) {
-        /* Get the current UTC time. */
-        struct tm *ptm;
-        currentUTC(&ptm);
         /* Check we have not been given an empty list of tasks. */
         if (*head == NULL) {
             break;
         }
         /* Get the next task to be executed. */
-        taskNode_t *next = (*head) -> next;
-        task_t task = (*head)->task;
+        taskNode_t *next = (*head)->next;
+        task_t *task = (*head)->task;
         /* Calculate and wait until the task should be executed. */
-        long int duration = mktime(task.next) - mktime(ptm);
+        long int duration = task->next - time(NULL);
         /* Sleep if we need to. */
         if (duration > 0) {
             char buffer[80];
             /* Produce the date/time in a format that is easy to read in log files etc. */
-            strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", task.next);
-            logInfo(logger, "[Scheduler] Waiting until %s.", buffer)
+            strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", gmtime(&task->next));
+            logInfo("Next task executing at: %s.", buffer)
             sleep(duration);
         }
-        if (thrPoolQueue(threadPool, task.func, logger) == -1) {
-            logError(logger, "Failed to send task '%d' to worker pool queue.", task.id)
+        if (thrPoolQueue(threadPool, task->func, NULL) == -1) {
+            logError("Failed to send a task to the threadpool.")
         }
-        logInfo(logger, "[Scheduler] Sent task '%d' to worker pool queue.", task.id)
-        task.prev = task.next;
-        /* Free up memory allocations. */
-        if (task.prev != NULL) {
-            free(task.prev);
-        }
+        logInfo("Sent a task to the threadpool.")
+
         /* Add the task back into the queue. */
         free(*head);
         (*head) = next;
-        taskAdd(head, &task);
+        taskAdd(head, task);
     }
     /* Something has broken or has requested this processor to stop. So cleanup
      * the pool. */

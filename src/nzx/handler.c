@@ -104,12 +104,12 @@ to_nbo(float in, float *out) {
 }
 
 int
-nzxStoreMarketPrices(nzxNode_t *head, logger_t *logger) {
+nzxStoreMarketPrices(nzxNode_t *head) {
     PGconn *conn;
     conn = postgresConnect();
 
     if (!conn) {
-        logCrit(logger, "[Executors] Failed to connect to the Postgres server.")
+        logCrit("Failed to connect to the Postgres server.")
         return -1;
     }
 
@@ -133,13 +133,13 @@ nzxStoreMarketPrices(nzxNode_t *head, logger_t *logger) {
                 0);
 
         if (res == NULL) {
-            logError(logger, "[Executors] Problem is: %s", PQerrorMessage(conn))
+            logError("Problem is: %s", PQerrorMessage(conn))
         }
 
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            logError(logger, "[Executors] Problem is: %s", PQerrorMessage(conn))
+            logError("Problem is: %s", PQerrorMessage(conn))
         } else {
-            logDebug(logger, "[Executors] Inserted into Postgres successfully.")
+            logDebug("[Executors] Inserted into Postgres successfully.")
         }
         head = head->next;
         PQclear(res);
@@ -149,13 +149,13 @@ nzxStoreMarketPrices(nzxNode_t *head, logger_t *logger) {
 }
 
 int
-nzxStoreMarketListings(nzxNode_t *head, logger_t *logger) {
+nzxStoreMarketListings(nzxNode_t *head) {
 
     PGconn *conn;
     conn = postgresConnect();
 
     if (!conn) {
-        logCrit(logger, "[Executors] Failed to connect to the Postgres server.")
+        logCrit("Failed to connect to the Postgres server.")
         return -1;
     }
 
@@ -173,13 +173,13 @@ nzxStoreMarketListings(nzxNode_t *head, logger_t *logger) {
                 0);
 
         if (res == NULL) {
-            logError(logger, "[Executors] Problem is: %s", PQerrorMessage(conn))
+            logError("Problem is: %s", PQerrorMessage(conn))
         }
 
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            logError(logger, "[Executors] Problem is: %s", PQerrorMessage(conn))
+            logError("Problem is: %s", PQerrorMessage(conn))
         } else {
-            logDebug(logger, "[Executors] Inserted into Postgres successfully.")
+            logDebug("Inserted into Postgres successfully.")
         }
         head = head->next;
         PQclear(res);
@@ -200,13 +200,13 @@ locateData(memoryChunk_t **chunk) {
 }
 
 void
-nzxExtractMarketPrices(memoryChunk_t *chunk, nzxNode_t **head, logger_t *logger) {
+nzxExtractMarketPrices(memoryChunk_t *chunk, nzxNode_t **head) {
     char *ptr;
 
     ptr = locateData(&chunk);
     // Check there is actually a table in the HTML downloaded
     if (!ptr) {
-        logError(logger, "[Executors] Invalid html. Contains no data.")
+        logError("Invalid html. Contains no data.")
         return;
     }
 
@@ -221,13 +221,13 @@ nzxExtractMarketPrices(memoryChunk_t *chunk, nzxNode_t **head, logger_t *logger)
 }
 
 void
-nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head, logger_t *logger) {
+nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head) {
     char *ptr;
 
     ptr = locateData(&chunk);
     // Check there is actually a table in the HTML downloaded
     if (!ptr) {
-        logError(logger, "[Executors] Invalid html. Contains no data.")
+        logError("Invalid html. Contains no data.")
         return;
     }
 
