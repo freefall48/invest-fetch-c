@@ -95,12 +95,12 @@ generatePriceListing(char **ptr) {
 }
 
 static void
-to_nbo(float in, float *out) {
-    uint32_t *i = (uint32_t * ) & in;
+toNbof(const float in, float *out) {
+    uint32_t *i = (uint32_t *) &in;
     uint16_t *r = (uint16_t *) out;
 
-    r[0] = htons((uint16_t)((*i) >> 16u));
-    r[1] = htons((uint16_t) * i);
+    r[0] = htons((uint16_t) ((*i) >> 16u));
+    r[1] = htons((uint16_t) *i);
 }
 
 int
@@ -115,16 +115,15 @@ nzxStoreMarketPrices(nzxNode_t *head) {
 
     while (head) {
         float converted; // This is now in network byte order
-        to_nbo(head->listing.Price, &converted);
+        toNbof(head->listing.Price, &converted);
 
         const char *const paramValues[2] = {head->listing.Code, (char *) &converted};
-
         int paramLengths[2] = {(int) strlen(head->listing.Code), sizeof(converted)};
         int paramFormats[2] = {0, 1};
 
         PGresult *res = PQexecParams(
                 conn,
-                "INSERT INTO nzx.prices (time, code, price) VALUES (NOW(), $1, $2::real);",
+                "INSERT INTO nzx.prices (time, code, price) VALUES (DATE_TRUNC('minute', (NOW() - interval '20 minutes')::timestamptz), $1, $2::real);",
                 2,
                 NULL,
                 paramValues,

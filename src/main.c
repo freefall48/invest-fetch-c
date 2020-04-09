@@ -45,12 +45,13 @@ int main() {
     taskNode_t *head = NULL;
     task_t *taskListings = taskCreate("0 20 22 * * 0-4", collectListings);
 
-    task_t *taskPricesPM = taskCreate("0 */20 22-23 * * 0-4", collectPrices);
-    task_t *taskPricesAM = taskCreate("0 */20 0-5 * * 1-5", collectPrices);
+//    task_t *taskPricesPM = taskCreate("0 */20 22-23 * * 0-4", collectPrices);
+//    task_t *taskPricesAM = taskCreate("0 */20 0-5 * * 1-5", collectPrices);
+    task_t *taskPricesAM = taskCreate("0 * * * * *", collectPrices);
 
     taskAdd(&head, taskListings);
     taskAdd(&head, taskPricesAM);
-    taskAdd(&head, taskPricesPM);
+//    taskAdd(&head, taskPricesPM);
 
     taskProcessor(&head);
     curl_global_cleanup();

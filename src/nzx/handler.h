@@ -13,6 +13,8 @@
 #include <curl/curl.h>
 #include <libpq-fe.h>
 #include <netinet/in.h>
+#include <sys/time.h>
+
 
 #include "models.h"
 #include "httpOps.h"
@@ -24,7 +26,7 @@
 //Need a better way to define this one?
 #define NZX_PRICE_IDF "<td class=\"text-right\" data-title=\"Price\">\n      "
 
-#define NZX_POSTGRES_URL "postgresql://postgres:password@localhost/invest"
+#define NZX_POSTGRES_URL "postgresql://dev:testing@172.16.0.20/invest"
 
 
 void nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head);
