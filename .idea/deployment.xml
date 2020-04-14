@@ -12,6 +12,23 @@
           </excludedPaths>
         </serverdata>
       </paths>
+      <paths name="Remote Host (d32e90c9-daf6-4b05-a3cd-46da56311f17)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/tmp.Bz0z3d96Xn" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="WSL (3f3365ed-be74-4623-b25b-49493a9ee383)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
     </serverData>
     <option name="myUploadOnCheckinName" value="RPI" />
   </component>

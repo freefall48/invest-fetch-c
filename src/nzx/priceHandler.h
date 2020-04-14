@@ -4,8 +4,8 @@
 //
 
 
-#ifndef INVEST_FETCH_C_HANDLER_H
-#define INVEST_FETCH_C_HANDLER_H
+#ifndef INVEST_FETCH_C_PRICEHANDLER_H
+#define INVEST_FETCH_C_PRICEHANDLER_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +14,7 @@
 #include <libpq-fe.h>
 #include <netinet/in.h>
 #include <sys/time.h>
+#include "../helpers/postgres.h"
 
 
 #include "models.h"
@@ -26,8 +27,6 @@
 //Need a better way to define this one?
 #define NZX_PRICE_IDF "<td class=\"text-right\" data-title=\"Price\">\n      "
 
-#define NZX_POSTGRES_URL "postgresql://dev:testing@172.16.0.20/invest"
-
 
 void nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head);
 
@@ -37,4 +36,4 @@ int nzxStoreMarketListings(nzxNode_t *head);
 
 int nzxStoreMarketPrices(nzxNode_t *head);
 
-#endif //INVEST_FETCH_C_HANDLER_H
+#endif //INVEST_FETCH_C_PRICEHANDLER_H

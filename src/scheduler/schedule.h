@@ -11,23 +11,30 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
+#include <semaphore.h>
 #include <time.h>
-#include "../lib/cron.h"
+#include "../helpers/cron.h"
 
 #include "../threading/threadPool.h"
 #include "../logging/logger.h"
 
-typedef struct schedulerTask task_t;
+typedef struct task task_t;
 
-typedef struct TaskNode {
+typedef struct scheduler scheduler_t;
+
+typedef struct taskNode {
     task_t *task;
-    struct TaskNode *next;
+    struct taskNode *next;
 } taskNode_t;
 
-void taskAdd(taskNode_t **head, task_t *task);
+void taskAdd(scheduler_t *scheduler, task_t *task);
 
-void taskProcessor(taskNode_t **head);
+void taskDelete(scheduler_t *scheduler, const char *id);
 
-task_t *taskCreate(const char *exePattern, void *(*func)(void *));
+scheduler_t *schedulerCreate(void);
+
+void *schedulerProcess(void *args);
+
+task_t *taskCreate(const char *id, const char *pattern, int repeat, void *(*func)(void *));
 
 #endif //INVEST_FETCH_C_SCHEDULE_H

@@ -40,7 +40,7 @@ writeMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp) {
 }
 
 memoryChunk_t *
-nzxFetchData(void) {
+nzxFetchData(const char *url) {
     CURL *curl_handle;
     CURLcode res;
 
@@ -51,7 +51,7 @@ nzxFetchData(void) {
 
     curl_handle = curl_easy_init();
     // Set the options for this curl handler
-    curl_easy_setopt(curl_handle, CURLOPT_URL, NZX_URL);
+    curl_easy_setopt(curl_handle, CURLOPT_URL, url);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *) chunk);
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT,

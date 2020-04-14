@@ -23,21 +23,21 @@
  * It is created by thrPoolCreate() and must be passed
  * unmodified to the remainder of the interfaces.
  */
-typedef	struct ThreadPool threadPool_t;
+typedef struct threadPool threadPool_t;
 
 /*
  * Create a thread pool.
- *	min_threads:	the minimum number of threads kept in the pool,
+ *	minThreads:	the minimum number of threads kept in the pool,
  *			always available to perform work requests.
- *	max_threads:	the maximum number of threads that can be
+ *	maxThreads:	the maximum number of threads that can be
  *			in the pool, performing work requests.
  *	linger:		the number of seconds excess idle worker threads
- *			(greater than min_threads) linger before exiting.
+ *			(greater than minThreads) linger before exiting.
  *	attr:		attributes of all worker threads (can be NULL);
  *			can be destroyed after calling thr_pool_create().
  * On error, thrPoolCreate() returns NULL with errno set to the error code.
  */
-threadPool_t *thrPoolCreate(uint16_t min_threads, uint16_t max_threads, uint16_t linger, pthread_attr_t *attr);
+threadPool_t *thrPoolCreate(uint16_t minThreads, uint16_t maxThreads, uint16_t linger, pthread_attr_t *attr);
 
 /*
  * Enqueue a work request to the thread pool job queue.

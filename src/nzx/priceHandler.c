@@ -3,7 +3,8 @@
 // Copyright (c) 2020 LocalNetwork NZ. All rights reserved.
 //
 
-#include "handler.h"
+#include "priceHandler.h"
+#include "postgres.h"
 
 static char *
 extractCode(char **ptr) {
@@ -19,33 +20,6 @@ extractCode(char **ptr) {
     strncpy(code, *ptr, len);
 
     return code;
-}
-
-static PGconn *postgresConnect(void) {
-    PGconn *conn;
-
-    conn = PQconnectdb(NZX_POSTGRES_URL);
-    /*
-     * This can only happen if there is not enough memory
-     * to allocate the PGconn structure.
-     */
-    if (conn == NULL) {
-        fprintf(stderr, "Out of memory connecting to PostgreSQL.\n");
-        return NULL;
-    }
-    /* check if the connection attempt worked */
-    if (PQstatus(conn) != CONNECTION_OK) {
-        /*
-         * Even if the connection failed, the PGconn structure has been
-         * allocated and must be freed.
-         */
-        PQfinish(conn);
-        return NULL;
-    }
-    /* this program expects the database to return data in UTF-8 */
-    PQsetClientEncoding(conn, "UTF8");
-
-    return conn;
 }
 
 
@@ -112,37 +86,51 @@ nzxStoreMarketPrices(nzxNode_t *head) {
         logCrit("Failed to connect to the Postgres server.")
         return -1;
     }
+    /* Request the time from the server, takes the byte order and incorrect time configurations out. */
+    PGresult *tm = PQexec(
+            conn,
+            "SELECT DATE_TRUNC('minute', (NOW() - interval '20 minutes'))::timestamptz"
+    );
+    if (tm == NULL) {
+        logCrit("Failed to get the time from the postgres server")
+        PQfinish(conn);
+        return -1;
+    } else if (PQresultStatus(tm) != PGRES_TUPLES_OK) {
+        logCrit("Postgres did not return a valid time set.")
+    }
+    if (PQgetisnull(tm, 0, 0)) {
+        logCrit("Server send no time data.")
+        PQclear(tm);
+        PQfinish(conn);
+        return -1;
+    }
+    char *timestamp = PQgetvalue(tm, 0, 0);
 
     while (head) {
         float converted; // This is now in network byte order
         toNbof(head->listing.Price, &converted);
 
-        const char *const paramValues[2] = {head->listing.Code, (char *) &converted};
-        int paramLengths[2] = {(int) strlen(head->listing.Code), sizeof(converted)};
-        int paramFormats[2] = {0, 1};
+        const char *const paramValues[3] = {timestamp, head->listing.Code, (char *) &converted};
+        int paramLengths[3] = {(int) strlen(timestamp), (int) strlen(head->listing.Code), sizeof(converted)};
+        int paramFormats[3] = {0, 0, 1};
 
         PGresult *res = PQexecParams(
                 conn,
-                "INSERT INTO nzx.prices (time, code, price) VALUES (DATE_TRUNC('minute', (NOW() - interval '20 minutes')::timestamptz), $1, $2::real);",
-                2,
+                "INSERT INTO nzx.prices (time, code, price) VALUES ($1, $2, $3::real);",
+                3,
                 NULL,
                 paramValues,
                 paramLengths,
                 paramFormats,
                 0);
 
-        if (res == NULL) {
+        if (res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
             logError("Problem is: %s", PQerrorMessage(conn))
-        }
-
-        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            logError("Problem is: %s", PQerrorMessage(conn))
-        } else {
-            logDebug("[Executors] Inserted into Postgres successfully.")
         }
         head = head->next;
         PQclear(res);
     }
+    PQclear(tm);
     PQfinish(conn);
     return 0;
 }
