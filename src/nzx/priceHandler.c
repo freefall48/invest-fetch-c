@@ -4,7 +4,6 @@
 //
 
 #include "priceHandler.h"
-#include "postgres.h"
 
 static char *
 extractCode(char **ptr) {
@@ -22,27 +21,6 @@ extractCode(char **ptr) {
     return code;
 }
 
-
-static listing_t
-generateCoreListing(char **ptr) {
-    listing_t listing;
-    char *end;
-    int len;
-    // Extract the listing code
-    listing.Code = extractCode(ptr);
-
-    // Find the end of the company name
-    *ptr = strstr(*ptr, NZX_COMP_IDF);
-    *ptr += strlen(NZX_COMP_IDF);
-    end = strchr((*ptr) + 1, '"');
-    len = (int) (end - (*ptr));
-
-    listing.Company = malloc((len + 1) * sizeof(char));
-    listing.Company[len] = '\0';
-    strncpy(listing.Company, *ptr, len);
-
-    return listing;
-}
 
 static listing_t
 generatePriceListing(char **ptr) {
@@ -89,7 +67,7 @@ nzxStoreMarketPrices(nzxNode_t *head) {
     /* Request the time from the server, takes the byte order and incorrect time configurations out. */
     PGresult *tm = PQexec(
             conn,
-            "SELECT DATE_TRUNC('minute', (NOW() - interval '20 minutes'))::timestamptz"
+            "SELECT DATE_TRUNC('minute', (now() AT time zone 'Pacific/Auckland') - interval '20 minutes')::timestamp"
     );
     if (tm == NULL) {
         logCrit("Failed to get the time from the postgres server")
@@ -135,6 +113,59 @@ nzxStoreMarketPrices(nzxNode_t *head) {
     return 0;
 }
 
+static char *
+locateData(memoryChunk_t **chunk) {
+    char *ptr;
+
+    // Move the pointer to the start of the data table
+    ptr = strstr((*chunk)->memory, NZX_TABLE_IDF);
+    // Move the ptr to the first data row
+    ptr = strstr(ptr, NZX_CODE_IDF);
+    return ptr;
+}
+
+void
+nzxExtractMarketPrices(memoryChunk_t *chunk, nzxNode_t **head) {
+    char *ptr;
+
+    ptr = locateData(&chunk);
+    // Check there is actually a table in the HTML downloaded
+    if (!ptr) {
+        logError("Invalid html. Contains no data.")
+        return;
+    }
+
+    while (ptr) {
+        listing_t listing = generatePriceListing(&ptr);
+
+        nzxPushListing(head, listing);
+        // Move the ptr to the next data row if it exists
+        ptr = strstr(ptr, NZX_CODE_IDF);
+    }
+
+}
+
+static listing_t
+generateCoreListing(char **ptr) {
+    listing_t listing;
+    char *end;
+    int len;
+    // Extract the listing code
+    listing.Code = extractCode(ptr);
+
+    // Find the end of the company name
+    *ptr = strstr(*ptr, NZX_COMP_IDF);
+    *ptr += strlen(NZX_COMP_IDF);
+    end = strchr((*ptr) + 1, '"');
+    len = (int) (end - (*ptr));
+
+    listing.Company = malloc((len + 1) * sizeof(char));
+    listing.Company[len] = '\0';
+    strncpy(listing.Company, *ptr, len);
+
+    return listing;
+}
+
 int
 nzxStoreMarketListings(nzxNode_t *head) {
 
@@ -175,38 +206,6 @@ nzxStoreMarketListings(nzxNode_t *head) {
     return 0;
 }
 
-static char *
-locateData(memoryChunk_t **chunk) {
-    char *ptr;
-
-    // Move the pointer to the start of the data table
-    ptr = strstr((*chunk)->memory, NZX_TABLE_IDF);
-    // Move the ptr to the first data row
-    ptr = strstr(ptr, NZX_CODE_IDF);
-    return ptr;
-}
-
-void
-nzxExtractMarketPrices(memoryChunk_t *chunk, nzxNode_t **head) {
-    char *ptr;
-
-    ptr = locateData(&chunk);
-    // Check there is actually a table in the HTML downloaded
-    if (!ptr) {
-        logError("Invalid html. Contains no data.")
-        return;
-    }
-
-    while (ptr) {
-        listing_t listing = generatePriceListing(&ptr);
-
-        nzxPushListing(head, listing);
-        // Move the ptr to the next data row if it exists
-        ptr = strstr(ptr, NZX_CODE_IDF);
-    }
-
-}
-
 void
 nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head) {
     char *ptr;
@@ -226,3 +225,4 @@ nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head) {
         ptr = strstr(ptr, NZX_CODE_IDF);
     }
 }
+

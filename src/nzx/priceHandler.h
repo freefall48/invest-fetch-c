@@ -28,12 +28,13 @@
 #define NZX_PRICE_IDF "<td class=\"text-right\" data-title=\"Price\">\n      "
 
 
-void nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head);
-
 void nzxExtractMarketPrices(memoryChunk_t *chunk, nzxNode_t **head);
+
+int nzxStoreMarketPrices(nzxNode_t *head);
+
+void nzxExtractMarketListings(memoryChunk_t *chunk, nzxNode_t **head);
 
 int nzxStoreMarketListings(nzxNode_t *head);
 
-int nzxStoreMarketPrices(nzxNode_t *head);
 
 #endif //INVEST_FETCH_C_PRICEHANDLER_H
